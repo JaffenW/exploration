@@ -1,16 +1,17 @@
 <template>
-  <Header/>
-  <Aside/>
-  <Main/>
+  <Navigate></Navigate>
+  <Aside></Aside>
+  <Main></Main>
 </template>
 
 <script>
-import Header from '@/components/layout/Header'
-import Aside from '@/components/layout/Aside'
-import Main from '@/components/layout/Main'
+import Navigate from './Navigate.vue'
+import Aside from './Aside.vue'
+import Main from './Main.vue'
+
 export default {
   name: 'Index',
-  components: { Header, Aside, Main }
+  components: { Navigate, Aside, Main }
 }
 </script>
 

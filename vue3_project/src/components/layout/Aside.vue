@@ -12,10 +12,16 @@ export default {
 
 <style scoped>
 .aside{
-  width: 20%;
-  height: 90vh;
-  background-color: pink;
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 70px;
+  height: 200px;
+  background-color: rgb(255,255,255);
   text-align: center;
-  line-height: 90vh;
+  box-shadow: 0 1px 3px 1px rgb(232, 225, 225);
+  border-radius: 8px;
+  padding: 5px 2px;
 }
 </style>
