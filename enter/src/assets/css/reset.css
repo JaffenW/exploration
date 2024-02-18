@@ -51,3 +51,7 @@ input {
   -webkit-appearance: none;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
+:root {
+	--red: red;
+	--blue: blue;
+}

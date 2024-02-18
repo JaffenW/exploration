@@ -22,6 +22,8 @@ app.get('/user', (req,res) => {
 
 app.use(express.static('public'))
 
+app.use(express.static('./dist'))
+
 app.listen(config.port, () => {
   console.log('启动成功了')
 })

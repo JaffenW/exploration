@@ -115,6 +115,14 @@ const routes = [
           title: '阴影'
         },
         component: import('@/views/shape/indent-navigation')
+      },
+      {
+        path: 'styleTest',
+        name: 'styleTest',
+        meta: {
+          title: '样式测试'
+        },
+        component: import('@/views/shape/style-test')
       }
     ]
   },
