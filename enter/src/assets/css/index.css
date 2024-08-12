@@ -1,0 +1,11 @@
+[data-theme=default] {
+    --color-primary: red
+}
+
+[data-theme=blue] {
+    --color-primary: blue
+}
+
+[data-theme=yellow] {
+    --color-primary: yellow
+}

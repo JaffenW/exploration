@@ -127,6 +127,29 @@ const routes = [
     ]
   },
   {
+    path: '/third',
+    name: 'third',
+    component: Layout,
+    children: [
+      {
+        path: 'echartTest',
+        name: 'echartTest',
+        meta: {
+          title: 'echart接入'
+        },
+        component: import('@/views/third/echart-test')
+      },
+      {
+        path: 'lowCode',
+        name: 'lowCode',
+        meta: {
+          title: '低代码'
+        },
+        component: import('@/views/third/low-code')
+      }
+    ]
+  },
+  {
     path: '/login',
     name: 'login',
     meta: {
