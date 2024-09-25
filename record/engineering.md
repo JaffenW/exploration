@@ -10,7 +10,7 @@
 [package.json文件scripts脚本解读](https://www.cnblogs.com/chaoyueqi/p/11232844.html)
 
 ## package.json中~和^的区别
-npm包的版本号的格式是`大版本.次版本.小版本`，~会更新小版本，^会更新大版本
+npm包的版本号的格式是`大版本.次版本.小版本`，~会更新小版本，^会更新次版本
 
 ## 可执行脚本中process.argv参数对象
 process.argv是一个数组：
@@ -144,7 +144,7 @@ postcss + babel
 ## npm install  @types/xxx的作用
 下载第三方库的声明文件，有时候当我们npm install完一个包，却发现 import 的时候 ts 报错，说找不到这个包。其原因是这个包内不含类型声明，所以 ts 并不能识别这个模块。这个时候我们可以去通过 npm install @types/包名 来下载这个包的声明文件，从而解决 ts 的报错。
 ## npm和npx的区别
-npm是包管理功能，但是用npm来执行node包命令和可执行文件比较麻烦，需要执行可执行文件的目录或在package.json配置。npx是npm v5.2.0引入的，是npm包的包执行器，简化了执行npm包命令的步骤，并且只可以执行未安装的包命令，执行的时候先临时下载，然后执行完删掉
+npm是包管理功能，但是用npm来执行node包命令和可执行文件比较麻烦，需要执行可执行文件的目录或在package.json配置。npx是npm v5.2.0引入的，是npm包的包执行器，简化了执行npm包命令的步骤，并且可以执行未安装的包命令，执行的时候先临时下载，然后执行完删掉
 ```js
 // npm第一种
 npm ./node_modules/.bin/your-package

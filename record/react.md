@@ -343,6 +343,7 @@ createRoot(document.getElementById("root")).render(
 2. 使用Suspense组件包裹路由中element选项对应的组件
 ```js
 // src/router/index.js文件
+import React, { lazy } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 const ComponentA = lazy(() => import('@components/ComponentA')
 const ComponentB = lazy(() => import('@components/ComponentB')
@@ -378,7 +379,7 @@ dva是一个基于redux和redux-saga的数据流方案，还内置了react-route
 	- React相对来说更加灵活和自由，但学习的难度也更大一点，Vue相对来说更容易上手；
 	- React有着更加庞大且灵活的生态系统，第三方库和工具选择更多一些，Vue生态相对来说较小一些，但也是很成熟
 	- vue通过v-model可以实现双向数据绑定，通过template去定义页面的结构，而react是单项数据流的，使用的是JSX，HTML和Javascript耦合在一起；
-	- vue采用数据劫持的方式，检测数据的变化更加精准，动了什么就更行什么，更新的粒度比较小，而react推崇函数式，手动通过setState触发更新，但这种情况是不知道哪些组件需要进行刷新，全部组件都要重新渲染，说白了就是直接无脑刷，这样性能肯定没这么好，所以就需要shouldComponentUpdate钩子来进行控制
+	- vue采用数据劫持的方式，检测数据的变化更加精准，动了什么就更新什么，更新的粒度比较小，而react推崇函数式，手动通过setState触发更新，但这种情况是不知道哪些组件需要进行刷新，全部组件都要重新渲染，说白了就是直接无脑刷，这样性能肯定没这么好，所以就需要shouldComponentUpdate钩子来进行控制
 
 	[一文带你了解Vue 和 React的区别](https://www.jb51.net/javascript/2857053fl.htm)
 	[Vue和React的区别—详细介绍](https://blog.csdn.net/YN2000609/article/details/131739018)

@@ -165,6 +165,12 @@
 1. rfid硬件设备对接
 - 通过sdk先对要监听的按键key注册，然后再设置监听事件，当物理按键按下后就能在监听事件接受到对应的key并进行不同的操作
 
+## 网易七鱼客服系统
+1. 工单管理
+ - 参与迭代6-8的功能开发
+ - 进行代码优化，提取公共业务逻辑代码，减少代码冗余（下拉选项接口，关联字段修改）
+ - 负责地区级联等公共组件的封装和维护
+
 # 技术字典
 ## 微前端
 [微前端了解](https://editor.csdn.net/md/?articleId=124238558)
@@ -223,6 +229,9 @@ Terser源自UglifyJS，是一个现代化的代码压缩器，专注于JavaScrip
 - 传统的css随着功能和页面的增加css也会增加，tailwindcss预先定义原子类，后面功能的增加只需要组合不同的原子类即可，编译出来的css增量几乎为0
 [Tailwind CSS](https://blog.csdn.net/xinyebudaoshi/article/details/135061079)
 [官方文档](https://www.tailwindcss.cn/docs/installation)
+
+## pinia
+vue3中的状态管理工具，提供了组合式api，实现了vuex5中想要的大部分内容
 
 # 工具积累
 ## vscode
