@@ -129,7 +129,11 @@ defineProperty其实是可以针对数组下标进行监听的，在使用习惯
 
 ## 组件之间的参数传递，兄弟组件怎么传
 - props/emit，\$parent/\$children，provide/inject，$ref，Vuex
-- 父组件作为中介进行传递、Vuex、事件总线
+- 父组件作为中介进行传递、Vuex、事件总线$bus
+
+## 事件总线
+创建一个Vue示例，然后需要用到的地方引入并且用$on订阅事件，在销毁的时候可以通过$off取消订阅，其他组件中可以通过$emit去发布事件
+
 ## new Vue()发生了什么？
 [new vue 实例发生了什么呢？](https://www.cnblogs.com/ifannie/p/12334091.html)
 [$mount实现](https://zhuanlan.zhihu.com/p/39685427)

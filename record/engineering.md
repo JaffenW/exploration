@@ -30,6 +30,16 @@ process.argv是一个数组：
 2. [.npmrc](https://zhuanlan.zhihu.com/p/651477901)：npm的配置文件，用来配置npm在执行命令时的行为和参数，如指定一些包的下载镜像源
 3. [tailwind.config.js](https://blog.csdn.net/xinyebudaoshi/article/details/135061079)：使用tailwindcss时的配置文件，tailwindcss是用来创建原子化类名的工具
 # webpack相关
+## 基础参数
+1. mode: 模式（'development'|'production'|'none'）,不同模式webpack做了不同的内置优化，webpack4开始有的
+2. entry： 入口（String|Array|Object）,推荐使用Object类型，配置拓展性更好，可以通过webpack-merage与其他配置合并
+3. output: 打包输出位置（Object），可以使用[占位符](https://webpack.docschina.org/configuration/output/#template-strings)来确保多个bundle都有唯一的名字
+4. module：主要是在module.rules中配置loader规则
+5. plugins：插件集（Array）
+6. resolve：配置解析模块的规则，alias配置别名
+7. devServer： 开发配置，常用的有port、proxy
+8. optimization：进行优化，splitChunks进行拆包，拆包中主要的设置有限制入口或者模块的引入限制（maxInitailRequests、maxAsyncRequests）、公共模块被引用多少次后分包(minChunks)、分包大小限制(minSize、maxSize)和最核心的cacheGroups，其他所有的属性都是为cacheGroup服务的
+
 ## webpack的工作流程
 1. 初始化参数，从配置文件和shell语句中读取并合并参数，得出最终的配置对象
 2. 根据配置对象初始化compiler对象（会用Tabable创建一个个hook实例存到this.hooks）
