@@ -206,7 +206,7 @@ defineProperty其实是可以针对数组下标进行监听的，在使用习惯
 4. 对于连续的hostied，这里会进行静态节点"字符串化"，即将连续的静态节点转为一个字符串，后续直接innerHTML挂载，减少大量的VNode的创建，也是很大的一个编译优化。(源码:stringifystatic)
 
 ## vue-cli和vite
-vite在开发环境是用esbuild来构建依赖的，在生产环境是用rollup进行打包。随便esm得到了广泛的支持，但是由于嵌套导入会导致额外的网络往返，为了在生成环境获得更佳的性能，所以使用了rollup，来进行一些tree-shaking、懒加载、chunk分割
+vite在开发环境是用esbuild来构建依赖的，在生产环境是用rollup进行打包。随着esm得到了广泛的支持，但是由于嵌套导入会导致额外的网络往返，为了在生成环境获得更佳的性能，所以使用了rollup，来进行一些tree-shaking、懒加载、chunk分割
 [Vite 基本介绍](https://zhuanlan.zhihu.com/p/382624283)
 [vite和esbuild/roolup的优缺点](https://blog.csdn.net/qq_35094120/article/details/129112694)
 

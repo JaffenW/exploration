@@ -51,6 +51,64 @@
 ## 图片裁剪和分片
 通过clip-path来进行裁剪
 [一步步实现前端图片裁剪功能](https://blog.csdn.net/jimojianghu/article/details/127620196)
+
+## 自适应布局
+可以使用postcss-pxtorem（十几万的周下载，几个月前有更新）和postcss-px-to-viewport（四千多的周下载）进行适配，除此之外还有postcss-px2rem和postcss-plugin-px2rem，不过都好几年没有更新了。postcss-pxtorem和postcss-px-to-viewport都需要配置postcss.config.js文件
+```js
+/**
+ * postcss-pxtorem配置
+ */
+module.exports = {
+  plugins: [
+    'postcss-pxtorem': {
+      rootValue: 16, // 根元素字体大小
+      propList: ['*'], // 需要转换的属性
+      selectorBlackList: [], // 选择器黑名单，也就是要忽略的选择器
+      replace: true, // 替换包含 rem 的规则
+      unitPrecision: 5, // 小数精度
+    },
+  ],
+};
+// 单独一个文件去动态设置根fontSize，后面引入到main.js
+const baseSize = 16 // 基准大小
+// 设置 rem 函数
+function setRem () {
+  // 当前页面宽度相对于 750 宽的缩放比例，可根据自己需要修改。
+  const scale = document.documentElement.clientWidth / 1920
+  // 设置页面根节点字体大小
+  document.documentElement.style.fontSize = (baseSize * Math.min(scale, 2)) + 'px'
+}
+// 初始化
+setRem()
+// 改变窗口大小时重新设置 rem
+window.onresize = function () {
+  setRem()
+}
+
+
+/**
+ * postcss-px-to-viewport
+ */
+module.exports = {
+  plugins: {
+    'postcss-px-to-viewport': {
+      viewportWidth: 375,  // 视口的宽度，对应的是我们设计稿的宽度
+      viewportHeight: 667, // 视口的高度，对应的是我们设计稿的高度 (可选)
+      unitPrecision: 5,    // 指定`px`转换为视窗单位值的小数位数（很多时候无法整除）
+      viewportUnit: 'vw',  // 指定需要转换成的视窗单位，建议使用vw
+      selectorBlackList: ['.ignore', '.hairlines'], // 指定不转换为视窗单位的类，可以自定义，可以无限添加，建议定义一至两个通用的类名
+      minPixelValue: 1,    // 小于或等于`1px`不转换为视窗单位
+      mediaQuery: false    // 允许在媒体查询中转换`px`
+    }
+  }
+}
+```
+需要注意的是，标签中直接设置with和height是转换不了的，如img标签，内联样式可以转换。多数浏览器自小的字号都是12px，所以我们使用rem的时候font-size要大于12px，如果有些地方一定要小于12px，那么可以使用transform: scale()去缩小（zoom和-webkit-text-size-adjust:none也能实现效果，但会有兼容性问题和用户手动缩放字体大小不变的问题）
+[postcss-pxtorem](https://blog.csdn.net/m0_73994018/article/details/140801948)
+[post-px-to-viewport](https://blog.csdn.net/gitblog_09232/article/details/142231027)
+[postcss-px-to-viewport和postcss-pxtorem对比](https://blog.csdn.net/m0_59209041/article/details/140927603)
+[让 Chrome 支持小于12px 的文字方式有哪些](https://baijiahao.baidu.com/s?id=1756596209407663713&wfr=spider&for=pc)
+
 #  项目
 ## 粤医保
 1. **登录流程**
@@ -168,7 +226,7 @@
 ## 网易七鱼客服系统
 1. 工单管理
  - 参与迭代6-8的功能开发
- - 进行代码优化，提取公共业务逻辑代码，减少代码冗余（下拉选项接口，关联字段修改）
+ - 进行代码优化，提取公共业务逻辑代码，减少代码冗余（下拉选项接口，关联字段修改）--工单是我进来接受比较大一个功能模块，主要就有创单和工单详情两个页面，但是工单的类型有很多（未成年人退款、品质反馈、用户投诉、客情维护），每个工单展示的字段也是不一样，其中就有一些是那种下拉选项的，一些少量固定的选项我们是有地方去配置的，但是有一些是要调第三方接口查询的，然后之前的人就直接if else去一个个判断字段然后去调用接口
  - 负责地区级联等公共组件的封装和维护
 
 # 技术字典

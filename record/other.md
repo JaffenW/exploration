@@ -1,6 +1,6 @@
 # 微信小程序
 ## 基础信息
-1. API三大分类：事件监听API、同步API(名字以Sync结尾)、异步API
+1. API三大分类：事件监听API(以on开头)、同步API(名字以Sync结尾)、异步API(大部分都是异步的)
 2. 小程序权限分为项目组权限(都有体验权限)和体验者权限，项目组权限又分为运营者、开发者、数据分析者
 3. 全局配置(pages、subpackges、window、tabBar)，默认pages第一个路径为首页，tabBar的路径要放在pages里最前面，tabBar最少2个，最多5个，顶部tabBar不展示icon
 4. 通过设置app.json中tabBar中属性custom为true可以自定义tabBar，但是为了低版本兼容和区分哪些是tabBar页面，原有list中定义的信息不能删除，还要在根目录创建一个custom-tab-bar组件
