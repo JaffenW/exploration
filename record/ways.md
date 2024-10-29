@@ -1,7 +1,8 @@
 # 技术方案
 ## 鉴权方案（session-cookie、Token验证、OAuth开放鉴权、HTTP Basic Authentication）
-1. 单点登录：一次登录，就可以访问多个相互信任的系统（[单点登录（Single Sign On）看这一篇就够了](https://www.51cto.com/article/629264.html)）
+1. 单点登录：一次登录，就可以访问多个相互信任的系统。统一弄一个单独的登录系统SSO。其他系统跳转到SSO进行登录，SSO登录完再跳转回原系统并带上ST(Service Ticket)，原系统接收到ST后通过后端调用SSO的服务验证是否登录，登录了就刷新登录状态
 2. toke无感刷新：登录的时候返回两个token，一个是短token、另一个是刷新token，短token过期了就用刷新token去换新的token。响应拦截器里面如果状态码是401那就要调刷新token的方法，刷完后再调用原来的请求，如果刷新token也过期了，这时候就要跳转到登录页面
+[单点登录（Single Sign On）看这一篇就够了](https://www.51cto.com/article/629264.html)
 ## 大规模数据处理
 1. 分页加载
 2. 分两个变量来记录总数据和渲染数据，随着滚动动态计算渲染数据，例如Vue就有第三方库可以实现这效果vue-virtual-scroller
