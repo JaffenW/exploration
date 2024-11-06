@@ -143,6 +143,50 @@ uni-app已经将常用的组件、api等封装到框架里了，我们使用这�
 [uniapp开发中遇到的plus.runtime.appid问题](https://blog.csdn.net/ybyshezhang/article/details/109697142)
 [uniapp 应用APP跳转微信小程序](https://blog.csdn.net/fbqgdxw/article/details/121676030)
 
+# electron
+## 是什么
+electron是一个基于web技术去开发桌面应用的框架，应用嵌入了谷歌浏览器内核和node，可以实现跨平台，缺点是包体积比较大
+
+## electron的两个主要模块
+1. app：管理应用程序的事件生命周期
+2. BrowserWindow：负责创建和管理应用窗口
+
+## 两个进程
+1. 主进程：管理整个应用的生命周期和其他的页面BroswerWindow。主进程是一个拥有着完全操作系统访问权限的 Node.js 环境，可以访问 Node.js 内置模块 和所有通过 npm 安装的包
+2. 渲染进程：展示图像内容，不能访问node环境的接口
+
+## 进程通信（预加载脚本）
+1. 预加载脚本运行于渲染线程但会在加载网页之前注入，预加载脚本与浏览器共享同一个全局Window，但不能直接改动window，因为他是默认上下文隔离的（contextIsolation），取而代之的使用contextBridge进行交互，使用contextBridge.exposeInMainWorld方法将属性设置到渲染器的window中，预加载脚本中除了能访问到页面dom外、还能访问到node和Electron API的有限子集访问权限，v20版本后只有node的部分权限。要使用预加载脚本，需要在实例化BrowserWindow的时候传入`webPreferences: { preload: path.join(__dirname, 'preload.js')}`参数。
+2. electron提供了ipcMain和ipcRenderer两个对象，通过它们可以实现主进程和渲染进程之间的通信
+- 渲染进程到主进程的单向通信：`ipcRender.send('eventName', data)`和`ipcMain.on('eventName', (event, data) => {})`
+- 渲染进程到主进程的双向通信：`ipcRender.invoke('eventName', data)`和`ipcMain.handle('eventName', (event, data) => {})`,invoke是一个异步的方法，可以接受来自handle的返回值
+- 主线程到渲染进程的单向通信：发送时需要指定渲染器接受，所以需要借助BrowserWindow示例来进行发送`mainWindow.webContents.send('eventName', data)`,预加载脚本中使用`ipcMain.on('eventName', (event, data) => {})`接收
+- 渲染进程到渲染进程之间通信：没有直接的方法可以直接渲染进程到渲染进程通信，只能通过主线程进行中转
+```js
+// preload.js
+const { contextBridge } = require('electron')
+
+contextBridge.exposeInMainWorld('versions', {
+  node: () => process.versions.node,
+  chrome: () => process.versions.chrome,
+  electron: () => process.versions.electron
+  // 除函数之外，我们也可以暴露变量
+})
+```
+
+## 为啥官方推荐使用whenReady
+1. 避免触发后才注册的这种边界情况
+2. ready之后这个事件就没啥用了，避免对这个触发后就没有必要监听的事件留用
+
+## macOs特殊处理
+1. Window和Linux关闭所有页面后退出，需要监听'window-all-closed'事件，然后调用app.quit()退出
+2. macOS中即使没有打开任何窗口，应用也会继续运行。我们要ready后去监听activate事件，事件触发后重新创建窗口
+
+## Vue + Electron
+1. 正常vue项目添加electron-builder`vue add electron-builder`,过程中下载electron等依赖会比较慢，推荐使用cnpm，相比之前vue项目，src下会多一个background.js的文件，可以进行一些应用的配置，如窗口大小、是否进行缩放等
+2. 打包过程中可以会出现部分依赖长时间downloading导致失败的情况，这时候需要将对应downloading的文件下载下来放到/users/admistrator/appdata/local/electron/cache目录下
+[Electron + Vue 搭建前端桌面应用](https://segmentfault.com/a/1190000040326098?decode__1660=n40xgDRDcDy73xiqGNDQTiQQ0QcBVuERYTD)
+
 # 跳转
 ## [前端三板斧（html、css、javascript）](https://blog.csdn.net/qq_43565396/article/details/139072665)
 ## [Vue问题积累](https://blog.csdn.net/qq_43565396/article/details/139072743)
