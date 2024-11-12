@@ -123,8 +123,6 @@ function update() {
 虚拟dom是对真实dom树的一种抽象，它会更轻量级，因为真实dom需要实现一些规范，考虑更多的一些事情，所以会比较重。如果只是很简单的一些操作，增加这样一个虚拟dom并不会说带来效率的提高，但是如果遇到一些大批量的数据修改或者是复杂的dom操作，采用虚拟dom形式效率会更高，它会将多次修改进行合并，会进行虚拟dom的对比，然后找出最小代价更新dom的方法去进行页面的更新。而且采取虚拟dom也是一种跨平台跨端的需要，因为浏览器、移动端、服务器端中真实dom其实是不一样，而虚拟dom正是一种与平台无关的抽象层。也正是考虑到效率、跨平台的这些需要，所以Vue、React这些框架才会采用虚拟dom的这种形式。
 ## render函数（runtime-only和runtime-complier的区别）
 [Vue的完整版和运行时版的区别](https://zhuanlan.zhihu.com/p/358414662)
-## vue2为啥不用defineProperty监听数组下标的变更
-defineProperty其实是可以针对数组下标进行监听的，在使用习惯来说，数组一般长度会很大，如果对每个下标进行劫持会带来性能问题，导致框架的不稳定，所以vue2放弃了劫持数组下标的方式，而是提供了$set方法操作数组
 ## 混入规则
 
 ## 组件之间的参数传递，兄弟组件怎么传
@@ -211,19 +209,39 @@ vite在开发环境是用esbuild来构建依赖的，在生产环境是用rollup
 [Vite 基本介绍](https://zhuanlan.zhihu.com/p/382624283)
 [vite和esbuild/roolup的优缺点](https://blog.csdn.net/qq_35094120/article/details/129112694)
 
+## 封装过哪些hook
+1. 获取字典项的hook，传入字典码值的数组，返回结果数组，使用useEffect执行
+
 # 原理
-## 响应式原理（数据劫持、观察者模式、vue2和vue3中实现的不同）
-1. Vue2原理实现
-vue定义响应式数据是通过observe方法来实现，调用改方法会返回一个Observer实例，创建实例的时候会判断是对象还是数组，如果是对象则调用walk方法，数组则调用observeArray方法，walk方法会去循环对象的keys，然后调用defineReactive方法，该方法其实就是使用defineProperty方法定义该属性的getter和setter，getter中会判断静态变量Dep.target是否存在(该值是一个Watcher实例)，这个观察者实例会将响应式数据的dep实例存到newDeps数组，也会将它本身存到响应式数据dep的subs数组中，深层的数据也会将这个Dep.target存一遍，setter中会调用该响应式数据的dep.notify方法，该方法会便利dep.subs中每一个watcher实例去执行update方法，后面会调到patch方法
+## new Vue() 做了什么
+1. new Vue()其实就是去调它_init（init.js）的一个方法，在这过程中会去初始化一些以下划线和$开头的属性，会去注册事件和处理插槽等东西，会去调用beforeCreate和create的钩子，在这两个钩子中间会去处理inject、provide和初始化响应式数据方法这些，包括data、props、method、computed、watch这些，其中会做一些重名的校验，例如data不能跟props和methods同名，methods不能跟props同名，最后会去判断有没有el属性，有的话就去调用$mount方法
+2. $mount（entry-runtime-with-compiler.js）中首先会对el进行校验，判断el对应的元素不能是body和documentElement文档节点，然后会判断我们参数中有没有render函数，有的话后面就直接用这个render函数去渲染dom树，没有的话就要去通过我们传入的template或者el去转为render函数，其中el是获取它的outerHTML去转render函数的
+3. 后面会调到mountComponent方法。该方法里面会判断有没有render方法，如果没有的话就用创建空节点的方法，然后会有beforeMount和mounted的钩子，在这过程中会创建一个观察者示例Watcher，并将更新函数作为参数传进去，更新函数中就会用到render方法（这里用的是_render，但是_render中也是用的$options.render）
+4. 在观察者示例中更新函数是会赋值给getter，并且因为不是懒加载，所以创建观察者实例的时候会调用一次getter方法，来触发Vue的渲染
+## Vue2响应式原理（数据劫持、观察者模式、vue2和vue3中实现的不同）
+1. vue定义响应式数据是通过observe方法来实现，调用该方法会返回一个Observer实例，创建实例的时候会判断是对象还是数组，如果是数组则调用observeArray方法，循环数组的每一项去调用observe方法，对象则调用walk方法，，walk方法会去循环对象的keys，然后调用defineReactive方法，该方法其实就是使用defineProperty方法定义该属性的getter和setter，getter中会判断静态变量Dep.target是否存在(该值是一个Watcher实例)，这个观察者实例会将响应式数据的dep实例存到newDeps数组，也会将它本身存到响应式数据dep的subs数组中，深层的数据也会将这个Dep.target存一遍，setter中会调用该响应式数据的dep.notify方法，该方法会便利dep.subs中每一个watcher实例去执行update方法，后面会调到patch方法
+2. vue2为啥不用defineProperty监听数组下标的变更
+- defineProperty其实是可以针对数组下标进行监听的，在使用习惯来说，数组一般长度会很大，如果对每个下标进行劫持会带来性能问题，导致框架的不稳定，所以vue2放弃了劫持数组下标的方式，而是提供了$set方法操作数组
+3. vue为什么只重写了push、pop、shift、unshift、splice、sort、reverse方法，没有重写其它方法
+- 因为其它方法不会改变原数组
 2. vue3为啥要换成proxy？
-definProperty只能对单个属性进行拦截，当处理嵌套层级比较深的对象，需要去递归遍历这个，把每一层的每一个属性都用defineProperty设置成响应式，动态新增删除属性需要通过\$set和$delete，proxy提供了更多的钩子和选项，拦截能力更强，但ie完全不支持proxy，并且vue3的响应式是惰性，也就是proxy并不能对深层次的数据设置响应式，只有用到了才会通过get设置响应式
-3. Vue3原理实现
-有一个track去专门收集依赖，在vue2中收集的是watcher，vue3中收集的是effect
-4. 简略说一下
-vue2通过defineProperty去对数据进行劫持，在get的时候会对每一个属性都创建一个依赖收集器dep.subs，当其他地方用到这个属性时就会触发get，然后就将观察者实例收集起来，当数据变更时会触发set，这时候会去调用依赖收集器中每一个watcher实例的update方法进行页面的更新。vue3则是通过proxy进行代理，不过proxy只会代理对象的第一层，当触发代理的对象的get方法的时候，会判断获取到的值是否为对象类型，如果是的话会再次通过reactive进行代理
+- definProperty只能对单个属性进行拦截，当处理嵌套层级比较深的对象，需要去递归遍历这个，把每一层的每一个属性都用defineProperty设置成响应式，动态新增删除属性需要通过\$set和$delete，proxy提供了更多的钩子和选项，拦截能力更强，但ie完全不支持proxy，并且vue3的响应式是惰性，也就是proxy并不能对深层次的数据设置响应式，只有用到了才会通过get设置响应式
 [数据劫持的基本原理](https://blog.csdn.net/ccuucc/article/details/124325558)
 [数据劫持](https://blog.csdn.net/qq_41632427/article/details/126256517)
 [Watcher和Dep的关系](https://blog.csdn.net/bb_xiaxia1998/article/details/127582651)
+## Vue3响应式原理
+1. vue2vue3都会在get的时候去收集依赖，在vue2中收集的是watcher，vue3中收集的是effect
+2. ref
+- 首先判断是不是ref实例，是的直接返回，不是的话创建一个refImpl对象，其实就是对传入的值包了一层对象，传入的值赋值到了对象的value中，然后使用defineProperty对value进行劫持，构造函数中会判断是否是对象，对象的话会使用reactive进行代理
+3. reactive
+- reactive实质就是用的proxy进行代理，这过程中会判断是否只读，是否是非对象，是否已经是代理对象，这些情况都会直接返回，还会根据传入的对象去代理的集合里面去找看没有没被代理过，如果有则返回代理对象，没有则创建一个代理对象，代理对象会有分集合和非集合，不同类型会有不同的代理逻辑。
+- 非集合的getter中会判断被代理的对象是否是数组，如果是采用数组的方法去获取值，不是的话则通过key获取到值后判断是否浅层响应式，是的话直接返回值，不是的话判断是否是ref类型，是的话判断是否解构返回，再之后会判断是否是对象，是的话会根据是否可读来返回只读数据或者重新用reactive去往下代理。
+- 在返回值之前会对非只读的数据使用track方法去收集依赖,根据被代理对象和被代理对象的key可以获取到该key对应的依赖集，然后把activeEffect收集起来
+- setter中最主要的就是调用trigger触发更新，不过在此之前会判断一种特殊情况，也就是旧值市ref类型，新值不是ref类型，这时候会直接将新值赋值到旧值的value上
+- trigger中会做一些操作的类型判断，判断是新增、删除、修改还是清空，还有判断数组的，收集需要更新的effect，然后会调用triggerEffects方法遍历每一个effect去调scheduler或者run方法
+4. 简略说一下
+- vue2通过defineProperty去对数据进行劫持，在get的时候会对每一个属性都创建一个依赖收集器dep.subs，当其他地方用到这个属性时就会触发get，然后就将观察者实例收集起来，当数据变更时会触发set，这时候会去调用依赖收集器中每一个watcher实例的update方法进行页面的更新
+- vue3则是通过proxy进行代理，不过proxy只会代理对象的第一层，当触发代理的对象的get方法的时候，会判断获取到的值是否为对象类型，如果是的话会再次通过reactive进行代理
 [【Vue3】源码解析-响应式原理](https://blog.csdn.net/weixin_44231544/article/details/134685548)
 [reactive,effect,ReactiveEffect](https://blog.csdn.net/qq_42531108/article/details/127598506)
 ## nextTick的原理
@@ -248,15 +266,24 @@ vue2通过defineProperty去对数据进行劫持，在get的时候会对每一�
 - 在vue3中使用patchflag为动态的内容打上标记，diff对比只对比有patchflag的元素
 [vue2与vue3中diff算法的区别](https://blog.csdn.net/qq_42220848/article/details/140442940)
 [为什么Vue3比Vue2效率更高！](https://blog.csdn.net/xiaolouuuu/article/details/143500669)
-
-## computed的原理
-- 它的本质上就是一个惰性观察者实例watcher（创建的时候会传入lazy为true），他会有一个dirty属性判断是否重新计算值，一开始dirty是为true的，但是并不会计算值，只有当有地方用到这个计算属性时，触发到get才会去计算它的值；当这个计算属性所依赖的状态发生变化时就会通知到这个watcher，并重新设置这个dirty为true，然后会判断有没有地方用到这个计算属性，也就是有没有订阅者，有的话才回去重新计算值，并且它做了一个优化，判断新旧值有没有变化，只有变化了才会重新渲染。
-- 每一个计算属性都会创建一个watcher，并将计算属性的函数会存在watcher的getter中，当使用到计算属性的时候，就会拿出对应的watcher判断dirty为true则将watche推入Dep的targetStack栈中，再调getter方法计算值，计算完后watcher会出栈，并将计算的值返回
+## Vue2 computed的原理
+1. 初始化computed的时候会做两件主要的事情，一是把每一个computed都创建为一个观察者实例，并放到vue实例的一个数组中，二是会根据计算属性名去vue实例中用defineproperty去设置属性劫持。
+2. 计算属性本质上就是一个惰性观察者实例watcher（创建的时候会传入lazy为true），他会有一个dirty属性判断是否重新计算值，这属性初始化是为true的，还有它里面用到了响应式数据更新了也会设置为true，当进行了计算之后就会设置为false。虽然它初始值为true，但是并不会计算值，只有当有地方用到这个计算属性时，触发到get才会去计算它的值
+3. 当这个计算属性所依赖的状态发生变化时就会通知到这个watcher，并重新设置这个dirty为true
+4. 然后会判断有没有地方用到这个计算属性，也就是有没有订阅者，有的话才回去重新计算值，并且它做了一个优化，判断新旧值有没有变化，只有变化了才会重新渲染。
+5. 每一个计算属性都会创建一个watcher，并将计算属性的函数会存在watcher的getter中，当使用到计算属性的时候，就会拿出对应的watcher判断dirty为true则将watche推入Dep的targetStack栈中，再调getter方法计算值，计算完后watcher会出栈，并将计算的值返回
 [vue computed原理](https://blog.csdn.net/weixin_44730897/article/details/123129264)
+## Vue3 computed原理
+1. 首先判断传入的参数是函数还是对象，函数的话作为getter，对象的话取出get作为getter，取出set作为setter
+2. 根据getter和setter
 ## watch的原理
 会去遍历我们定义的每一个watch，在源码中最终会调用$watch去创建一个watcher，然后加入到组件的_watchers队列里，
 [watch/computed的实现逻辑和区别](https://blog.csdn.net/qq_36384657/article/details/137138375)
-
+## 组件事件触发原理
+1. 事件最主要的是Vue原型上的$on方法，在初始化的时候会去到组件实例$options参数中的_parentListeners参数去循环使$on去注册事件，当然注册过程中还可能会对一些旧的事件进行对比移除。$on最主要的就是在组件实例中的_events去添加对应名称的事件集，事件集是一个数组，也就是一个事件名称会对应多个事件处理方法。$off方法也就是将_events中对应名称的事件集置为null。$emit方法就是根据事件名称取出事件集进行循环使用apply或者call进行处理。$once也是调用$on去注册事件，不过注册的时候会对事件回调包一层方法，方法里面会执行原回调前(确实是执行前前)调用$off注销事件。
+## props和methods的原理
+1. props：没做什么很多处理，只是校验了一下prop然后用跟data一样的defineReactive方法去对props每一个属性去实现响应式
+2. methods：将方法设置到vue实例中，并用bind给每一个方法绑定this到vue实例
 ## 同步代码中多次修改响应式数据会渲染几次，用户setTimeout修改响应式数据会渲染几次
 Vue是异步渲染的，数据修改后先存起来再生成一个渲染任务，渲染任务依次考虑用promise.then、mutationObserver、setImmediate、setTimeout生成，会有一个变量pending，pending为false的时候才会去生成微任务
 

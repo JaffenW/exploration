@@ -110,6 +110,10 @@ module.exports = {
 [postcss-px-to-viewport和postcss-pxtorem对比](https://blog.csdn.net/m0_59209041/article/details/140927603)
 [让 Chrome 支持小于12px 的文字方式有哪些](https://baijiahao.baidu.com/s?id=1756596209407663713&wfr=spider&for=pc)
 
+## 动态菜单权限
+1. 配置静态路由和动态路由，登录的时候去获取用户信息，用户的角色中带有路由信息，将这些信息添加到状态管理中，并且添加拼接到静态路由然后通过router.addRoutes添加动态路由，在beforeEach中判断是否是静态路由，不是则判断是否有token，没有则转到登录页，有则从状态管理中取出路由信息判断要跳转的路由是否在路由表中，在的话正常往下走，不在则提示没有权限并判断是否是从登录页过来的，是的话跳转到首页，不是的话跳转到登录页
+
+
 #  项目
 ## 粤医保
 1. **登录流程**
