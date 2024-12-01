@@ -29,7 +29,47 @@ computed会有缓存，擅长处理依赖多种响应式数据的情况，会产
 ## 插件的结构和注册插件Vue.use()
 Vue的插件就是一个带有install方法的对象，Vue.use()的时候会自动调用install方法并将Vue构造器传入
 ## 过滤器Vue.filter
+
 ## 自定义指令
+1. 定义指令
+	- 全局注册Vue.directive(name, options)
+	- 局部注册，跟data等同级directives({ name: options })
+2. options参数，里面都是一些类似生命周期的钩子
+```js
+const myDirective = {
+  // 在绑定元素的 attribute 前
+  // 或事件监听器应用前调用
+  created(el, binding, vnode) {
+    // 下面会介绍各个参数的细节
+  },
+  // 在元素被插入到 DOM 前调用
+  beforeMount(el, binding, vnode) {},
+  // 在绑定元素的父组件
+  // 及他自己的所有子节点都挂载完成后调用
+  mounted(el, binding, vnode) {},
+  // 绑定元素的父组件更新前调用
+  beforeUpdate(el, binding, vnode, prevVnode) {},
+  // 在绑定元素的父组件
+  // 及他自己的所有子节点都更新后调用
+  updated(el, binding, vnode, prevVnode) {},
+  // 绑定元素的父组件卸载前调用
+  beforeUnmount(el, binding, vnode) {},
+  // 绑定元素的父组件卸载后调用
+  unmounted(el, binding, vnode) {}
+}
+```
+3. 钩子中的参数
+	- el：指令绑定到元素，可以用来直接操作dom
+	- binding
+		- value：传递给指令的值。例如在 v-my-directive="1 + 1" 中，值是 2。
+		- oldValue：之前的值，仅在 beforeUpdate 和 updated 中可用。无论值是否更改，它都可用。
+		- arg：传递给指令的参数 (如果有的话)。例如在 v-my-directive:foo 中，参数是 "foo"。
+		- modifiers：一个包含修饰符的对象 (如果有的话)。例如在 v-my-directive.foo.bar 中，修饰符对象是 { foo: true, bar: true }。
+		- instance：使用该指令的组件实例。
+		- dir：指令的定义对象
+	- vnode：代表绑定元素的底层 VNode。
+	- prevVnode：代表之前的渲染中指令所绑定元素的 VNode。仅在 beforeUpdate 和 updated 钩子中可用
+4. 注意： 只有当所需功能只能通过直接的 DOM 操作来实现时，才应该使用自定义指令。其他情况下应该尽可能地使用 v-bind 这样的内置指令来声明式地使用模板，这样更高效，也对服务端渲染更友好
 
 ## 用delete和Vue.delete删除数组有什么区别
 delete是将数组对应下标设置为empty或者undefined，并不会改变数组长度和触发响应式更新，Vue.delete是将对应下标的数据彻底删除，数组长度会改变并且会触发响应式更新
@@ -39,13 +79,15 @@ delete是将数组对应下标设置为empty或者undefined，并不会改变数
 - MVVM的视图和模型是完全解耦的，视图由更新的话通过viewmodel绑定的事件去更新数据，数据有变化的话也通过viewmodel更新到视图，其最主要的通过实现一套响应式机制去自动更新视图，避免了大量dom操作，使得开发人员只用关注业务逻辑，提高了开发效率
 
 [MVC，MVP和MVVM架构解析](https://blog.csdn.net/java521666/article/details/126054377)
-## 组件中使用v-model
+## 自定义组件双向数据绑定
+1. v-model：vue2中使用model指定v-model传入的数据名和触发事件名，默认是value和input事件，只能声明一个，vue3中使用defineProps和defineEmits去指定，可以声明多个
+2. v-bind:xxx.sync：实际上传入的是xxx和update:xxx，可以声明多个，xxx可以是对象，如果是对象则会将对象中的每一个属性都设置一个单独的update:xxx事件
 ```html
 <!-- 父组件中 -->
 <UserName
   v-model="name"
-  v-model:first-name="first"
-  v-model:last-name="last"
+  :firstName.sync="first"
+  :lastName.sync="last"
 />
 ```
 v-model标签在组件中其实相当于传入了一个modelValue的参数跟一个update:modelValue的事件
@@ -53,19 +95,22 @@ v-model标签在组件中其实相当于传入了一个modelValue的参数跟一
 <script>
 export default {
   props: {
-    modelValue: String, // 默认情况
-    firstName: String, // 指定参数的形式
-    lastName: String
+    xxxValue: String,
+    first: String,
+    last: String
   },
-  emits: ['update:modelValue', 'update:firstName', 'update:lastName']
+  model: {
+	prop: 'xxxValue', // 随便取名，只要跟props中一样就行，默认value
+	emit: 'change' // 也是随便取名，默认input
+  },
 }
 </script>
 
 <template>
   <input
     type="text"
-    :value="modelValue"
-    @input="$emit('update:modelValue', $event.target.value)"
+    :value="xxxValue"
+    @input="$emit('change', $event.target.value)"
   />
   <input
     type="text"
@@ -79,7 +124,7 @@ export default {
   />
 </template>
 ```
-vue3中使用的方式跟vue2差不多，不过采用组合式api defineProps和defineEmit来声明props和emit(v3.4前)，v3.4后推荐使用的方式是defineModel()宏，defineModel返回的是一个ref，它可以像其他ref一样修改和访问，它的`.value`和父组件的`v-model`值同步，意味着它的值改变后父组件的值也会更新
+vue3中采用组合式api defineProps和defineEmit来声明props和emit(v3.4前)，v3.4后推荐使用的方式是defineModel()宏，defineModel返回的是一个ref，它可以像其他ref一样修改和访问，它的`.value`和父组件的`v-model`值同步，意味着它的值改变后父组件的值也会更新
 ```html
 <!-- Child.vue -->
 <script setup>
@@ -94,6 +139,7 @@ function update() {
   <div>parent bound v-model is: {{ model }}</div>
 </template>
 ```
+[v-model与.sync的区别](https://blog.csdn.net/gkx19898993699/article/details/133777090)
 ## 生命周期
 1. vue2中有beforeCreate、created、beforeMount、mounted、beforeDestroy、destroyed、beforeUpdate、updated，还有keep-alive组件中使用的钩子activated、deactivated，过渡动画使用的钩子beforeEnter、enter，还有errorCaptured、render
 ![生命周期](https://img-blog.csdnimg.cn/direct/aaeff8b5d0e245c393fb75059db750b7.png)
@@ -105,8 +151,11 @@ function update() {
 
 ## 父子组件生命周期
 父（beforeCreate、created、beforeMount），子（beforeCreate、created、beforeMount、mounted），父mounted
+
 ## privide和inject
+
 ## vue.config.js配置
+
 ## vue2和vue3中怎么动态引入图片
 1. vue2的采用require来引入，vue3的话要使用import来引入`const img = new URL('../asset/img/icon.img', import.meta.url).href`。其中URL第一个参数如果是相对路径，则需要传递第二个参数(基础路径），import.meta.url就是获取当前模块的路径。
 2. 在vue官网中对静态资源解释如下
@@ -128,13 +177,11 @@ function update() {
 ## 组件之间的参数传递，兄弟组件怎么传
 - props/emit，\$parent/\$children，provide/inject，$ref，Vuex
 - 父组件作为中介进行传递、Vuex、事件总线$bus
+- vue3中defineProps/defineEmit、子组件中使用defineExpose将数据和方法暴露，父组件通过设置ref属性可以获取到组件实例并使用这些数据和方法，provide/inject方法
 
 ## 事件总线
 创建一个Vue示例，然后需要用到的地方引入并且用$on订阅事件，在销毁的时候可以通过$off取消订阅，其他组件中可以通过$emit去发布事件
 
-## new Vue()发生了什么？
-[new vue 实例发生了什么呢？](https://www.cnblogs.com/ifannie/p/12334091.html)
-[$mount实现](https://zhuanlan.zhihu.com/p/39685427)
 ## 页面优化
 [SPA（单页应用）首屏加载速度慢怎么解决？](https://blog.csdn.net/weixin_44475093/article/details/110675962)
 [Vue 包大小优化--从 1.72M 到 94K](https://juejin.cn/post/6929839648542425102)
@@ -214,38 +261,40 @@ vite在开发环境是用esbuild来构建依赖的，在生产环境是用rollup
 
 # 原理
 ## new Vue() 做了什么
-1. new Vue()其实就是去调它_init（init.js）的一个方法，在这过程中会去初始化一些以下划线和$开头的属性，会去注册事件和处理插槽等东西，会去调用beforeCreate和create的钩子，在这两个钩子中间会去处理inject、provide和初始化响应式数据方法这些，包括data、props、method、computed、watch这些，其中会做一些重名的校验，例如data不能跟props和methods同名，methods不能跟props同名，最后会去判断有没有el属性，有的话就去调用$mount方法
+1. new Vue()其实就是去调它_init（init.js）的一个方法，在这过程中会去初始化一些以下划线和\$开头的属性，会去注册事件和处理插槽等东西，会去调用beforeCreate和create的钩子，在这两个钩子中间会去处理inject、provide和初始化响应式数据方法这些，包括data、props、method、computed、watch这些，其中会做一些重名的校验，例如data不能跟props和methods同名，methods不能跟props同名，最后会去判断有没有el属性，有的话就去调用$mount方法
 2. $mount（entry-runtime-with-compiler.js）中首先会对el进行校验，判断el对应的元素不能是body和documentElement文档节点，然后会判断我们参数中有没有render函数，有的话后面就直接用这个render函数去渲染dom树，没有的话就要去通过我们传入的template或者el去转为render函数，其中el是获取它的outerHTML去转render函数的
 3. 后面会调到mountComponent方法。该方法里面会判断有没有render方法，如果没有的话就用创建空节点的方法，然后会有beforeMount和mounted的钩子，在这过程中会创建一个观察者示例Watcher，并将更新函数作为参数传进去，更新函数中就会用到render方法（这里用的是_render，但是_render中也是用的$options.render）
 4. 在观察者示例中更新函数是会赋值给getter，并且因为不是懒加载，所以创建观察者实例的时候会调用一次getter方法，来触发Vue的渲染
+[new vue 实例发生了什么呢？](https://www.cnblogs.com/ifannie/p/12334091.html)
+[$mount实现](https://zhuanlan.zhihu.com/p/39685427)
 ## Vue2响应式原理（数据劫持、观察者模式、vue2和vue3中实现的不同）
 1. vue定义响应式数据是通过observe方法来实现，调用该方法会返回一个Observer实例，创建实例的时候会判断是对象还是数组，如果是数组则调用observeArray方法，循环数组的每一项去调用observe方法，对象则调用walk方法，，walk方法会去循环对象的keys，然后调用defineReactive方法，该方法其实就是使用defineProperty方法定义该属性的getter和setter，getter中会判断静态变量Dep.target是否存在(该值是一个Watcher实例)，这个观察者实例会将响应式数据的dep实例存到newDeps数组，也会将它本身存到响应式数据dep的subs数组中，深层的数据也会将这个Dep.target存一遍，setter中会调用该响应式数据的dep.notify方法，该方法会便利dep.subs中每一个watcher实例去执行update方法，后面会调到patch方法
 2. vue2为啥不用defineProperty监听数组下标的变更
-- defineProperty其实是可以针对数组下标进行监听的，在使用习惯来说，数组一般长度会很大，如果对每个下标进行劫持会带来性能问题，导致框架的不稳定，所以vue2放弃了劫持数组下标的方式，而是提供了$set方法操作数组
+	- defineProperty其实是可以针对数组下标进行监听的，在使用习惯来说，数组一般长度会很大，如果对每个下标进行劫持会带来性能问题，导致框架的不稳定，所以vue2放弃了劫持数组下标的方式，而是提供了$set方法操作数组
 3. vue为什么只重写了push、pop、shift、unshift、splice、sort、reverse方法，没有重写其它方法
-- 因为其它方法不会改变原数组
+	- 因为这些方法比较常用并且会改变原数组，其他方法要么不会改变原数组，要么使用频率很低（fill、copyWithin）
 2. vue3为啥要换成proxy？
-- definProperty只能对单个属性进行拦截，当处理嵌套层级比较深的对象，需要去递归遍历这个，把每一层的每一个属性都用defineProperty设置成响应式，动态新增删除属性需要通过\$set和$delete，proxy提供了更多的钩子和选项，拦截能力更强，但ie完全不支持proxy，并且vue3的响应式是惰性，也就是proxy并不能对深层次的数据设置响应式，只有用到了才会通过get设置响应式
+	- definProperty只能对单个属性进行拦截，当处理嵌套层级比较深的对象，需要去递归遍历这个，把每一层的每一个属性都用defineProperty设置成响应式，动态新增删除属性需要通过\$set和$delete，proxy提供了更多的钩子和选项，拦截能力更强，但ie完全不支持proxy，并且vue3的响应式是惰性，也就是proxy并不能对深层次的数据设置响应式，只有用到了才会通过get设置响应式
 [数据劫持的基本原理](https://blog.csdn.net/ccuucc/article/details/124325558)
 [数据劫持](https://blog.csdn.net/qq_41632427/article/details/126256517)
 [Watcher和Dep的关系](https://blog.csdn.net/bb_xiaxia1998/article/details/127582651)
 ## Vue3响应式原理
-1. vue2vue3都会在get的时候去收集依赖，在vue2中收集的是watcher，vue3中收集的是effect
+1. vue2vue3都会在get的时候去收集依赖，在vue2中收集的是watcher，vue3中收集的是effect。vue3中收集依赖主要用到的是trackEffects的方法，触发更新用的是triggerEffects的方法
 2. ref
-- 首先判断是不是ref实例，是的直接返回，不是的话创建一个refImpl对象，其实就是对传入的值包了一层对象，传入的值赋值到了对象的value中，然后使用defineProperty对value进行劫持，构造函数中会判断是否是对象，对象的话会使用reactive进行代理
+	- 首先判断是不是ref实例，是的直接返回，不是的话创建一个refImpl对象，其实就是对传入的值包了一层对象，传入的值赋值到了对象的value中，然后使用defineProperty对value进行劫持，构造函数中会判断是否是对象，对象的话会使用reactive进行代理
 3. reactive
-- reactive实质就是用的proxy进行代理，这过程中会判断是否只读，是否是非对象，是否已经是代理对象，这些情况都会直接返回，还会根据传入的对象去代理的集合里面去找看没有没被代理过，如果有则返回代理对象，没有则创建一个代理对象，代理对象会有分集合和非集合，不同类型会有不同的代理逻辑。
-- 非集合的getter中会判断被代理的对象是否是数组，如果是采用数组的方法去获取值，不是的话则通过key获取到值后判断是否浅层响应式，是的话直接返回值，不是的话判断是否是ref类型，是的话判断是否解构返回，再之后会判断是否是对象，是的话会根据是否可读来返回只读数据或者重新用reactive去往下代理。
-- 在返回值之前会对非只读的数据使用track方法去收集依赖,根据被代理对象和被代理对象的key可以获取到该key对应的依赖集，然后把activeEffect收集起来
-- setter中最主要的就是调用trigger触发更新，不过在此之前会判断一种特殊情况，也就是旧值市ref类型，新值不是ref类型，这时候会直接将新值赋值到旧值的value上
-- trigger中会做一些操作的类型判断，判断是新增、删除、修改还是清空，还有判断数组的，收集需要更新的effect，然后会调用triggerEffects方法遍历每一个effect去调scheduler或者run方法
+	- reactive实质就是用的proxy进行代理，这过程中会判断是否只读，是否是非对象，是否已经是代理对象，这些情况都会直接返回，还会根据传入的对象去代理的集合里面去找看没有没被代理过，如果有则返回代理对象，没有则创建一个代理对象，代理对象会有分集合和非集合，不同类型会有不同的代理逻辑。
+	- 非集合的getter中会判断被代理的对象是否是数组，如果是采用数组的方法去获取值，不是的话则通过key获取到值后判断是否浅层响应式，是的话直接返回值，不是的话判断是否是ref类型，是的话判断是否解构返回，再之后会判断是否是对象，是的话会根据是否可读来返回只读数据或者重新用reactive去往下代理。
+	- 在返回值之前会对非只读的数据使用track方法去收集依赖,根据被代理对象和被代理对象的key可以获取到该key对应的依赖集，然后把activeEffect收集起来
+	- setter中最主要的就是调用trigger触发更新，不过在此之前会判断一种特殊情况，也就是旧值市ref类型，新值不是ref类型，这时候会直接将新值赋值到旧值的value上
+	- trigger中会做一些操作的类型判断，判断是新增、删除、修改还是清空，还有判断数组的，收集需要更新的effect，然后会调用triggerEffects方法遍历每一个effect去调scheduler或者run方法
 4. 简略说一下
-- vue2通过defineProperty去对数据进行劫持，在get的时候会对每一个属性都创建一个依赖收集器dep.subs，当其他地方用到这个属性时就会触发get，然后就将观察者实例收集起来，当数据变更时会触发set，这时候会去调用依赖收集器中每一个watcher实例的update方法进行页面的更新
-- vue3则是通过proxy进行代理，不过proxy只会代理对象的第一层，当触发代理的对象的get方法的时候，会判断获取到的值是否为对象类型，如果是的话会再次通过reactive进行代理
+	- vue2通过defineProperty去对数据进行劫持，在get的时候会对每一个属性都创建一个依赖收集器dep.subs，当其他地方用到这个属性时就会触发get，然后就将观察者实例收集起来，当数据变更时会触发set，这时候会去调用依赖收集器中每一个watcher实例的update方法进行页面的更新
+	- vue3则是通过proxy进行代理，不过proxy只会代理对象的第一层，当触发代理的对象的get方法的时候，会判断获取到的值是否为对象类型，如果是的话会再次通过reactive进行代理
 [【Vue3】源码解析-响应式原理](https://blog.csdn.net/weixin_44231544/article/details/134685548)
 [reactive,effect,ReactiveEffect](https://blog.csdn.net/qq_42531108/article/details/127598506)
 ## nextTick的原理
-其实就是创建一个微任务或者宏任务，并在这个微任务或者宏任务中去执行nextTick的回调。它会有一个回调队列，并且有一个pending，当第一次会设置pendding为true，后续队列执行完后才会重新设置为false。它内部会依次降级去使用promise.then、mutationObserver、setImmediate、setTimeout生成微任务或宏任务
+其实就是创建一个微任务或者宏任务，并在这个微任务或者宏任务中去执行nextTick的回调。它会有一个回调队列，并且有一个pending，当pendding为false的时候就会去开启一个任务并且将pendding设置为true，后续队列执行完后才会重新设置为false。它内部会依次降级去使用promise.then、mutationObserver、setImmediate、setTimeout生成微任务或宏任务
 [$nextTick底层原理(详细) - vue篇](https://juejin.cn/post/7314493016497684520?searchId=2024042322304407721945538F6934CE56)
 [nextTick实现原理，必拿下!](https://juejin.cn/post/7087866362785169416?searchId=2024042322304407721945538F6934CE56)
 ## diff算法内容及原理
@@ -275,7 +324,7 @@ vite在开发环境是用esbuild来构建依赖的，在生产环境是用rollup
 [vue computed原理](https://blog.csdn.net/weixin_44730897/article/details/123129264)
 ## Vue3 computed原理
 1. 首先判断传入的参数是函数还是对象，函数的话作为getter，对象的话取出get作为getter，取出set作为setter
-2. 根据getter和setter
+2. 根据getter和setter去创建一个ComputedRefImpl实例，在这个实例里面实际上创建的就是effect
 ## watch的原理
 会去遍历我们定义的每一个watch，在源码中最终会调用$watch去创建一个watcher，然后加入到组件的_watchers队列里，
 [watch/computed的实现逻辑和区别](https://blog.csdn.net/qq_36384657/article/details/137138375)

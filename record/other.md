@@ -15,7 +15,6 @@
 	- app.wxss中的全局样式对组件无效
 	- 只有class选择器会有样式隔离，id选择器、属性选择器、元素选择器对样式隔离无效
 	- 可以通过组件json中的styleIsolation控制样式隔离选项
-
 3. data全等于**properties**，都是可读可写的
 4. 监听器用observers(类似于Vue的watch)，多个属性同时监听可以加逗号隔开`'a,b': function (a,b) {}`
 5. 插槽slot用法跟Vue一样，不过使用多个插槽需要在组件options属性中设置`mutipleSlots：true`
@@ -77,12 +76,12 @@ navigateTo、redirectTo、navigateBack、switchTab、reLaunch
 [微信小程序封装request请求，包含请求拦截器，响应拦截器和请求重试功能](https://blog.csdn.net/m0_53215500/article/details/130735475)
 
 ## setStorage加上有效期
-封装下方法，value中expire设置失效的时间戳，data设置存储的数据
+1. 封装公共方法setStorage和getStorage，存了对应key值的内容后判断有没有传过期时间（多少秒后过期），有的话将过期时间转化为具体过期时间戳，key+'_deadtime'作为key存入，获取缓存的时候根据这个key获取过期时间，如果有并且过期了返回空或者返回默认值，封装的setStorage中如果没有传入过期时间还会去删除对应key+'_deadtime'的值
+2. 存入value中包含deadtime和data两个属性，deadtime是经过处理后的失效时间戳，data设置存储的数据，获取缓存的方法中判断deadtime是否存在并且是否过期，过期返回空或者默认值，不存在则直接返回data
 [小程序中给localStorage加上有效期](https://juejin.cn/post/6992518324210892830)
 
 ## 使用web-view要做什么
 1. 要配置业务域名（将验证文件放到对方域名的根目录下）
-
 [微信小程序使用webview注意事项：](https://blog.csdn.net/wbb1126/article/details/131935541)
 
 ## 微信H5跟微信小程序H5有什么不一样
@@ -94,9 +93,19 @@ navigateTo、redirectTo、navigateBack、switchTab、reLaunch
 1. 微信小程序开发采用的是微信自己的语言，uni-app是用的vue框架
 2. 微信小程序只能在微信环境运行，uni-app是可以一套代码生成多个平台的应用程序，包括小程序、H5、APP，在编译的时候能转换成不同平台需要的代码
 
+## wxml和标准的hmtl有什么异同
+1. 都是用来描述页面结构的，都是由标签、属性组成
+2. wxml会有类似于vue的一些指令，如果wx:if、wx:for
+3. 标签名字不一样，小程序的标签会更少一些
+4. 宿主环境也不一样，小程序的宿主是微信，html的宿主是浏览器
+5. 小程序中无法使用window、document对象
+
+## wxss和css有什么不一样
+1. wxss有css大部分的特性，但也做了一些扩充
+2. wxss多了rpx的属性
+
 ## 双线程机制
 渲染线程 + 逻辑线程
-
 [小程序的双线程架构，为什么要设计成双线程的，双线程之间如何通信](https://blog.csdn.net/qq_17335549/article/details/136152251)
 
 ## 登录流程
